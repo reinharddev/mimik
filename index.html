@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mimik — a face for your app</title>
+<meta name="description" content="30 expressions people read at a glance, 9 reactions, lip-synced speech. One small file, no dependencies, MIT.">
+<meta property="og:title" content="mimik — a face for your app">
+<meta property="og:description" content="30 expressions, 9 reactions, lip-synced speech. One small file, no dependencies.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#fff;--fg:#0d0f11;--mut:#62676c;--line:#cfd2d5;--soft:#f4f5f6;--font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--font);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+.pill{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 22px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--fg);font:500 15px var(--font);text-decoration:none;cursor:pointer;transition:background .15s,transform .15s}
+.pill:hover{background:var(--soft)}
+.pill:active{transform:scale(.97)}
+.pill.solid{background:var(--fg);border-color:var(--fg);color:#fff}
+.pill.solid:hover{background:#2a2e33}
+.pill.sm{height:34px;padding:0 14px;font-size:14px}
+.pill[aria-pressed=true]{background:var(--fg);border-color:var(--fg);color:#fff}
+nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;text-decoration:none}
+nav .brand i{width:28px;height:28px;display:block}
+nav .links{display:flex;gap:20px;font-size:15px;color:var(--mut)}
+nav .links a{text-decoration:none}nav .links a:hover{color:var(--fg)}
+
+/* wall */
+.wall{overflow:hidden;display:grid;gap:14px;padding:6px 0;-webkit-mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.row{display:flex;gap:22px;width:max-content;animation:slide 90s linear infinite}
+.row.rev{animation-direction:reverse;animation-duration:110s}
+@keyframes slide{to{transform:translateX(calc(-50% - 11px))}}
+.cell{display:grid;justify-items:center;gap:6px;font:12px var(--mono);color:var(--mut)}
+.cell div{width:72px;height:72px}
+@media (prefers-reduced-motion:reduce){.row{animation:none}}
+
+.hero{text-align:center;padding:72px 0 88px}
+h1{font-size:clamp(44px,9vw,68px);line-height:1.02;letter-spacing:-.035em;font-weight:700}
+.hero p{margin-top:18px;font-size:20px;color:var(--mut)}
+.hero .cta{display:flex;gap:10px;justify-content:center;margin-top:30px;flex-wrap:wrap}
+code.inl{display:inline-block;margin-top:22px;padding:7px 14px;border-radius:10px;background:var(--soft);font:14px var(--mono)}
+
+section{padding:56px 0}
+.kick{font:500 13px var(--mono);color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
+h2{font-size:32px;line-height:1.15;letter-spacing:-.02em;margin:6px 0 10px}
+.lead{color:var(--mut);max-width:620px;font-size:18px}
+
+/* playground */
+.play{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:28px;margin-top:32px;align-items:start}
+.stage-col{position:sticky;top:16px}
+.stage{aspect-ratio:1;border-radius:28px;background:var(--soft);display:grid;place-items:center;overflow:hidden}
+.stage .holder{max-width:90%;max-height:90%}
+.stage-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl{display:grid;gap:22px}
+.grp h3{font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-bottom:9px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.colors{display:flex;gap:10px;flex-wrap:wrap}
+.colors label{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--mut)}
+.colors input{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;padding:0;background:none;cursor:pointer;overflow:hidden}
+.colors input::-webkit-color-swatch-wrapper{padding:0}.colors input::-webkit-color-swatch{border:0;border-radius:50%}
+input[type=range]{width:100%;accent-color:var(--fg)}
+pre{background:var(--fg);color:#e9ebec;border-radius:16px;padding:18px 20px;font:13px/1.6 var(--mono);overflow:auto;white-space:pre}
+.codewrap{position:relative;margin-top:28px}
+.codewrap .pill{position:absolute;top:10px;right:10px}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px}
+.two h3{font-size:20px;margin-bottom:10px}
+.two pre{height:calc(100% - 36px)}
+table{width:100%;border-collapse:collapse;margin-top:26px;font-size:15px}
+td,th{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+td:first-child{font-family:var(--mono);white-space:nowrap;font-size:14px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:36px}
+.facts div{padding:22px;border-radius:20px;background:var(--soft)}
+.facts b{display:block;margin-bottom:4px}
+.facts span{color:var(--mut)}
+footer{padding:40px 0 60px;color:var(--mut);font-size:14px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:40px}
+footer a{text-decoration:none}footer a:hover{color:var(--fg)}
+@media (max-width:860px){.play,.two,.facts{grid-template-columns:1fr}.stage-col{position:static}.hero{padding:48px 0 60px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="#"><i id="logo"></i>mimik</a>
+    <div class="links"><a href="#playground">Playground</a><a href="#usage">Usage</a><a href="https://github.com/reinharddev/mimik">GitHub</a></div>
+  </nav>
+</div>
+
+<div class="wall" aria-hidden="true"><div class="row" id="r1"></div><div class="row rev" id="r2"></div></div>
+
+<div class="wrap">
+  <header class="hero">
+    <h1>Put a face on it.</h1>
+    <p id="size">One file. No dependencies. MIT.</p>
+    <code class="inl">import { createFace } from './face.js'</code>
+    <div class="cta"><a class="pill solid" href="#playground">Open the playground</a><a class="pill" href="face.js" download>Download face.js</a></div>
+  </header>
+
+  <section id="playground">
+    <div class="kick">Playground</div>
+    <h2>Make one you like.</h2>
+    <p class="lead">This is the real library running. Fiddle until it looks right, then copy the code or save a still.</p>
+    <div class="play">
+      <div class="stage-col">
+        <div class="stage" id="stage"><div class="holder" id="holder"></div></div>
+        <div class="stage-actions"><button class="pill sm solid" id="copy">Copy code</button><button class="pill sm" id="png">Save PNG</button><button class="pill sm" id="rnd">Surprise me</button></div>
+      </div>
+      <div class="ctl">
+        <div class="grp"><h3>Preset</h3><div class="chips" id="presets"></div></div>
+        <div class="grp"><h3>Colour</h3><div class="colors">
+          <label><input type="color" id="c-skin">head</label><label><input type="color" id="c-ink">eyes</label><label><input type="color" id="c-ring">ring</label></div></div>
+        <div class="grp"><h3>Size — <span id="szv">200</span>px</h3><input type="range" id="size-r" min="64" max="320" value="200"></div>
+        <div class="grp"><h3>Options</h3><div class="chips" id="opts"></div></div>
+        <div class="grp"><h3>Mood</h3><div class="chips" id="moods"></div></div>
+        <div class="grp"><h3>Effects</h3><div class="chips" id="fxs"></div><div class="chips" id="fxt" style="margin-top:8px"></div></div>
+        <div class="grp"><h3>Poke it</h3><div class="chips" id="pokes"></div></div>
+      </div>
+    </div>
+    <div class="codewrap"><pre id="code"></pre></div>
+  </section>
+
+  <section id="usage">
+    <div class="kick">Usage</div>
+    <h2>Drop it in.</h2>
+    <p class="lead">Plain ES module, styles inject themselves. Colours come from three CSS variables, size comes from the element you give it.</p>
+    <div class="two">
+      <div><h3>Plain HTML</h3><pre id="u1"></pre></div>
+      <div><h3>Drive it</h3><pre id="u2"></pre></div>
+    </div>
+    <table>
+      <tr><th>Call</th><th>What it does</th></tr>
+      <tr><td>createFace(el, opts)</td><td>Mounts a face in <code>el</code>. Options: <code>expression, mouth, pupils, follow, blink, wander, skin, ink, ring, gloss, rim, glow, scan, hue</code>.</td></tr>
+      <tr><td>face.set(name)</td><td>Morph to one of the 30 expressions. Unknown names throw an error that lists the real ones.</td></tr>
+      <tr><td>face.react(name)</td><td>One-shot: <code>blink wink nod shake bounce pop boing spin jitter</code>.</td></tr>
+      <tr><td>face.talk(0..1)</td><td>Speech energy, call it every frame. The mouth opens and closes with it.</td></tr>
+      <tr><td>face.update(opts)</td><td>Change any option live.</td></tr>
+      <tr><td>face.destroy()</td><td>Unmount and stop animating.</td></tr>
+    </table>
+    <div class="facts">
+      <div><b>Cheap at any number</b><span>Every face on the page shares one animation loop and one pointer listener, and faces scrolled out of view skip their frame. The wall above costs about what a handful of faces do.</span></div>
+      <div><b>Respects the user</b><span><code>prefers-reduced-motion</code> turns off wandering, blinking and the movement reactions, with no guard of your own.</span></div>
+    </div>
+  </section>
+
+  <footer><span>mimik — MIT licence</span><a href="https://github.com/reinharddev/mimik">github.com/reinharddev/mimik</a></footer>
+</div>
+
+<script type="module">
+import { createFace, expressions, reactions } from './face.js'
+
+const $ = (s) => document.querySelector(s)
+const names = Object.keys(expressions)
+const base = new URL('face.js', location.href).href
+
+// logo + wall
+createFace($('#logo'), { expression: 'happy', follow: true, wander: false, skin: '#0d0f11', ink: '#fff', ring: '#0d0f11' })
+for (const [id, list] of [['#r1', names], ['#r2', [...names].reverse()]]) {
+  const row = $(id)
+  for (const n of [...list, ...list]) {
+    const c = document.createElement('div'); c.className = 'cell'
+    const f = document.createElement('div'); c.append(f, n)
+    row.appendChild(c)
+    createFace(f, { expression: n, follow: false, wander: false, mouth: true })
+  }
+}
+fetch('face.js').then((r) => r.text()).then((t) => {
+  $('#size').textContent = `${(new Blob([t]).size / 1024).toFixed(1)} kB, unminified. No dependencies. MIT.`
+}).catch(() => {})
+
+// playground state
+const presets = {
+  default: ['#000000', '#e9ebec', '#34363a'],
+  inverted: ['#ffffff', '#0d0f11', '#cfd2d5'],
+  acid: ['#0b0b0b', '#b6ff3d', '#2a3a10'],
+  sky: ['#0a2540', '#7dd3fc', '#1e4a73'],
+  paper: ['#f4efe6', '#2b2a28', '#cfc6b5'],
+  ember: ['#1a0b05', '#ff6a2b', '#4a1f0e'],
+}
+const optDefs = { mouth: 'draw a mouth', pupils: 'inner pupils', follow: 'follow cursor', blink: 'blink', wander: 'idle wander' }
+const fxFlags = { gloss: 'gloss', rim: 'rim light', glow: 'glow', scan: 'scanlines', hue: 'hue drift' }
+const fxThemes = { none: [], chrome: ['gloss', 'rim'], glass: ['gloss', 'glow'], neon: ['glow', 'rim'], crt: ['scan', 'glow'], dream: ['hue', 'glow', 'gloss'] }
+const S = { expression: 'idle', size: 200, skin: '#000000', ink: '#e9ebec', ring: '#34363a', mouth: false, pupils: false, follow: true, blink: true, wander: true, gloss: false, rim: false, glow: false, scan: false, hue: false }
+
+const face = createFace($('#holder'), S)
+const holder = $('#holder')
+const chip = (parent, label, on, cls = 'pill sm') => { const b = document.createElement('button'); b.className = cls; b.textContent = label; b.onclick = on; parent.appendChild(b); return b }
+const toggles = {}
+
+function sync() {
+  holder.style.width = holder.style.height = S.size + 'px'
+  $('#szv').textContent = S.size
+  face.update(S)
+  for (const k in toggles) toggles[k].setAttribute('aria-pressed', !!S[k])
+  for (const b of $('#moods').children) b.setAttribute('aria-pressed', b.textContent === S.expression)
+  for (const b of $('#presets').children) { const p = presets[b.textContent]; b.setAttribute('aria-pressed', !!p && p[0] === S.skin && p[1] === S.ink && p[2] === S.ring) }
+  for (const b of $('#fxt').children) { const f = fxThemes[b.textContent]; b.setAttribute('aria-pressed', f.length === Object.keys(fxFlags).filter((k) => S[k]).length && f.every((k) => S[k])) }
+  $('#c-skin').value = S.skin; $('#c-ink').value = S.ink; $('#c-ring').value = S.ring
+  $('#stage').style.background = luminance(S.skin) > 0.6 ? '#1b1d20' : ''
+  $('#code').textContent = code()
+}
+const luminance = (h) => { const n = parseInt(h.slice(1), 16); return (0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255 }
+
+function code() {
+  const o = [`expression: '${S.expression}',`]
+  if (S.mouth) o.push('mouth: true,')
+  if (S.pupils) o.push('pupils: true,')
+  if (!S.follow) o.push('follow: false,')
+  if (!S.blink) o.push('blink: false,')
+  if (!S.wander) o.push('wander: false,')
+  for (const k in fxFlags) if (S[k]) o.push(`${k}: true,`)
+  return `<div id="bot" style="
+  width: ${S.size}px; height: ${S.size}px;
+  --face-skin: ${S.skin};
+  --face-ink: ${S.ink};
+  --face-ring: ${S.ring};
+"></div>
+
+<script type="module">
+  import { createFace } from '${base}'
+
+  createFace(document.querySelector('#bot'), {
+    ${o.join('\n    ')}
+  })
+<\/script>`
+}
+
+for (const p in presets) chip($('#presets'), p, () => { [S.skin, S.ink, S.ring] = presets[p]; sync() })
+chip($('#presets'), 'surprise me', () => rnd())
+for (const [k, label] of Object.entries(optDefs)) toggles[k] = chip($('#opts'), label, () => { S[k] = !S[k]; sync() })
+for (const n of names) chip($('#moods'), n, () => { S.expression = n; sync() })
+for (const [k, label] of Object.entries(fxFlags)) toggles[k] = chip($('#fxs'), label, () => { S[k] = !S[k]; sync() })
+for (const t in fxThemes) chip($('#fxt'), t, () => { for (const k in fxFlags) S[k] = fxThemes[t].includes(k); sync() })
+for (const r of reactions) chip($('#pokes'), r, () => face.react(r))
+for (const k of ['skin', 'ink', 'ring']) $('#c-' + k).oninput = (e) => { S[k] = e.target.value; sync() }
+$('#size-r').oninput = (e) => { S.size = +e.target.value; sync() }
+
+function rnd() {
+  const h = Math.random() * 360, hex = (hh, s, l) => { const a = s * Math.min(l, 1 - l), f = (n) => { const k = (n + hh / 30) % 12; return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))).toString(16).padStart(2, '0') }; return '#' + f(0) + f(8) + f(4) }
+  S.skin = hex(h, 0.5, 0.07); S.ink = hex((h + 20) % 360, 0.9, 0.62); S.ring = hex(h, 0.4, 0.2)
+  S.expression = names[Math.floor(Math.random() * names.length)]
+  sync(); face.react(reactions[Math.floor(Math.random() * reactions.length)])
+}
+$('#rnd').onclick = rnd
+
+$('#copy').onclick = async (e) => {
+  try { await navigator.clipboard.writeText(code()); e.target.textContent = 'Copied' } catch { e.target.textContent = 'Press ⌘C' }
+  setTimeout(() => (e.target.textContent = 'Copy code'), 1400)
+}
+
+// PNG: bake computed colours into a clone of the live svg
+$('#png').onclick = () => {
+  const live = face.el, clone = live.cloneNode(true)
+  const a = live.querySelectorAll('*'), b = clone.querySelectorAll('*')
+  a.forEach((n, i) => {
+    const cs = getComputedStyle(n), m = b[i]
+    m.removeAttribute('style')
+    if (m.tagName !== 'svg' && m.tagName !== 'g' && m.tagName !== 'defs' && m.tagName !== 'clipPath' && m.tagName !== 'pattern') {
+      m.setAttribute('fill', cs.fill); m.setAttribute('stroke', cs.stroke)
+      m.setAttribute('opacity', cs.opacity); m.setAttribute('fill-opacity', cs.fillOpacity)
+    } else if (m.tagName === 'g') m.setAttribute('opacity', cs.opacity)
+  })
+  clone.setAttribute('viewBox', '-60 -60 120 120')
+  clone.removeAttribute('class'); clone.setAttribute('width', 1080); clone.setAttribute('height', 1080)
+  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+  bg.setAttribute('x', -60); bg.setAttribute('y', -60); bg.setAttribute('width', 120); bg.setAttribute('height', 120)
+  bg.setAttribute('fill', luminance(S.skin) > 0.6 ? '#1b1d20' : '#f4f5f6')
+  clone.insertBefore(bg, clone.firstChild.nextSibling)
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+  const img = new Image()
+  img.onload = () => {
+    const c = document.createElement('canvas'); c.width = c.height = 1080
+    c.getContext('2d').drawImage(img, 0, 0, 1080, 1080)
+    c.toBlob((bl) => { const u = document.createElement('a'); u.href = URL.createObjectURL(bl); u.download = `mimik-${S.expression}.png`; u.click() })
+  }
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(clone))
+}
+
+// usage snippets
+$('#u1').textContent = `<div id="bot" style="width:160px;height:160px"></div>
+
+<script type="module">
+  import { createFace } from '${base}'
+  createFace(document.querySelector('#bot'), { expression: 'curious', mouth: true })
+<\/script>`
+$('#u2').textContent = `const face = createFace(el, { mouth: true })
+
+face.set('joy')          // change mood
+face.react('bounce')     // one-shot reaction
+face.talk(0.6)           // 0-1 speech energy, per frame
+face.update({ glow: true, ink: '#b6ff3d' })
+face.destroy()`
+
+sync()
+</script>
+</body>
+</html>
