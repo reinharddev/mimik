@@ -252,11 +252,11 @@ class Face {
     this.sweat = el('path', { d: 'M0 -8C5 -1 6 4 0 7C-6 4 -5 -1 0 -8Z', fill: '#7dd3fc' }, fx)
     this.blush = [-1, 1].map((sgn) => el('ellipse', { cx: sgn * (T.sp + 9), cy: T.ey + ry + 7, rx: 8, ry: 4.5, fill: '#ff7a9a' }, fx))
     this.zs = [0, 1, 2].map((i) => {
-      const t = el('text', { 'font-size': 9 + i * 3, 'font-weight': 700, 'font-family': 'ui-sans-serif,system-ui,sans-serif', style: 'fill:var(--face-ink,#fff)' }, fx)
+      const t = el('text', { 'font-size': 9 + i * 3, 'font-weight': 700, 'font-family': 'ui-sans-serif,system-ui,sans-serif', style: 'fill:var(--face-ink,#fff)' }, head)
       t.textContent = 'z'
       return t
     })
-    this.q = el('text', { x: 26, y: -22, 'font-size': 20, 'font-weight': 700, 'font-family': 'ui-sans-serif,system-ui,sans-serif', style: 'fill:var(--face-ink,#fff)' }, fx)
+    this.q = el('text', { x: 26, y: -22, 'font-size': 20, 'font-weight': 700, 'font-family': 'ui-sans-serif,system-ui,sans-serif', style: 'fill:var(--face-ink,#fff)' }, head)
     this.q.textContent = '?'
     // effect layers
     const gl = el('g', { class: 'mm-fx mm-gloss-l' }, fx)
