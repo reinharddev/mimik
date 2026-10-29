@@ -8,9 +8,15 @@
 <meta property="og:title" content="mimik — a face for your app">
 <meta property="og:description" content="30 expressions, 9 reactions, lip-synced speech. One small file, no dependencies.">
 <meta name="theme-color" content="#ffffff">
+<script>try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
-:root{--bg:#fff;--fg:#0d0f11;--mut:#62676c;--line:#cfd2d5;--soft:#f4f5f6;--font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+:root{color-scheme:light;--bg:#fff;--fg:#0d0f11;--mut:#62676c;--line:#cfd2d5;--soft:#f4f5f6;--pre:#0d0f11;--prefg:#e9ebec;--font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+:root[data-theme=dark]{color-scheme:dark;--bg:#0d0f11;--fg:#e9ebec;--mut:#9aa0a6;--line:#2a2e33;--soft:#181b1f;--pre:#14171a;--prefg:#e9ebec}
+:root[data-theme=dark] .cell div,:root[data-theme=dark] .holder{--face-skin:#1b1e22;--face-ring:#3a3d42}
+:root[data-theme=dark] pre{border:1px solid var(--line)}
+#logo{--face-skin:var(--fg);--face-ink:var(--bg);--face-ring:var(--fg)}
+.theme{width:34px;height:34px;padding:0;justify-content:center}
 *{box-sizing:border-box;margin:0}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--font);-webkit-font-smoothing:antialiased}
@@ -19,14 +25,14 @@ a{color:inherit}
 .pill{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 22px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--fg);font:500 15px var(--font);text-decoration:none;cursor:pointer;transition:background .15s,transform .15s}
 .pill:hover{background:var(--soft)}
 .pill:active{transform:scale(.97)}
-.pill.solid{background:var(--fg);border-color:var(--fg);color:#fff}
-.pill.solid:hover{background:#2a2e33}
+.pill.solid{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.pill.solid:hover{opacity:.85;background:var(--fg)}
 .pill.sm{height:34px;padding:0 14px;font-size:14px}
-.pill[aria-pressed=true]{background:var(--fg);border-color:var(--fg);color:#fff}
+.pill[aria-pressed=true]{background:var(--fg);border-color:var(--fg);color:var(--bg)}
 nav{display:flex;align-items:center;justify-content:space-between;height:64px}
 nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;text-decoration:none}
 nav .brand i{width:28px;height:28px;display:block}
-nav .links{display:flex;gap:20px;font-size:15px;color:var(--mut)}
+nav .links{display:flex;align-items:center;gap:20px;font-size:15px;color:var(--mut)}
 nav .links a{text-decoration:none}nav .links a:hover{color:var(--fg)}
 
 /* wall */
@@ -63,7 +69,7 @@ h2{font-size:32px;line-height:1.15;letter-spacing:-.02em;margin:6px 0 10px}
 .colors input{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;padding:0;background:none;cursor:pointer;overflow:hidden}
 .colors input::-webkit-color-swatch-wrapper{padding:0}.colors input::-webkit-color-swatch{border:0;border-radius:50%}
 input[type=range]{width:100%;accent-color:var(--fg)}
-pre{background:var(--fg);color:#e9ebec;border-radius:16px;padding:18px 20px;font:13px/1.6 var(--mono);overflow:auto;white-space:pre}
+pre{background:var(--pre);color:var(--prefg);border-radius:16px;padding:18px 20px;font:13px/1.6 var(--mono);overflow:auto;white-space:pre}
 .codewrap{position:relative;margin-top:28px}
 .codewrap .pill{position:absolute;top:10px;right:10px}
 
@@ -87,7 +93,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--fg)}
 <div class="wrap">
   <nav>
     <a class="brand" href="#"><i id="logo"></i>mimik</a>
-    <div class="links"><a href="#playground">Playground</a><a href="#usage">Usage</a><a href="https://github.com/reinharddev/mimik">GitHub</a></div>
+    <div class="links"><a href="#playground">Playground</a><a href="#usage">Usage</a><a href="https://github.com/reinharddev/mimik">GitHub</a><button class="pill sm theme" id="theme" aria-label="Toggle dark mode"></button></div>
   </nav>
 </div>
 
@@ -157,8 +163,14 @@ const $ = (s) => document.querySelector(s)
 const names = Object.keys(expressions)
 const base = new URL('face.js', location.href).href
 
+// theme toggle
+const root = document.documentElement
+const paintTheme = () => { $('#theme').textContent = root.dataset.theme === 'dark' ? '☀' : '☾'; document.querySelector('meta[name=theme-color]').content = root.dataset.theme === 'dark' ? '#0d0f11' : '#ffffff' }
+$('#theme').onclick = () => { root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('theme', root.dataset.theme) } catch {} ; paintTheme() }
+paintTheme()
+
 // logo + wall
-createFace($('#logo'), { expression: 'happy', follow: true, wander: false, skin: '#0d0f11', ink: '#fff', ring: '#0d0f11' })
+createFace($('#logo'), { expression: 'happy', follow: true, wander: false })
 for (const [id, list] of [['#r1', names], ['#r2', [...names].reverse()]]) {
   const row = $(id)
   for (const n of [...list, ...list]) {
