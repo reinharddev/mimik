@@ -36,6 +36,71 @@ export const expressions = {
   angry: { top: 0.45, tilt: 22, m: [10, -6, 3] },
   sleepy: { top: 0.75, m: [6, 0, 2] },
   sleep: { top: 1, deco: 'z', m: [5, 2, 0] },
+  laugh: { bot: 0.65, top: 0.05, sy: 0.85, m: [14, 9, 9] },
+  cry: { top: 0.3, tilt: -14, ey: 5, deco: 'tears', m: [9, -6, 4] },
+  sob: { top: 0.55, tilt: -20, ey: 6, trem: 1, deco: 'tears', m: [10, -7, 6] },
+  starstruck: { deco: 'star', m: [12, 9, 6] },
+  dead: { deco: 'x', m: [9, -1, 0] },
+  cool: { deco: 'shades', m: [9, 4, 0], ms: 1.5 },
+  nervous: { top: 0.2, tilt: -8, trem: 0.6, deco: 'sweat', m: [9, -2, 3] },
+  embarrassed: { top: 0.3, gx: -5, gy: 4, deco: 'blush', m: [6, 1, 3] },
+  blush: { bot: 0.35, deco: 'blush', m: [8, 5, 0] },
+  proud: { top: 0.3, gy: -3, tilt: -4, ey: 3, m: [11, 6, 0] },
+  hopeful: { sx: 1.15, sy: 1.2, gy: -5, top: 0.2, tilt: -8, m: [7, 3, 0] },
+  determined: { top: 0.4, tilt: 14, m: [10, -1, 0] },
+  mischievous: { top: 0.3, bot: 0.25, tilt: 16, m: [13, 8, 3], ms: 1.5 },
+  skeptical: { l: { top: 0.5, tilt: 6 }, r: { sy: 1.2, tilt: -6, ey: 2 }, m: [7, -1, 0], ms: 2 },
+  tired: { top: 0.65, gy: 2, ey: 6, m: [8, -2, 2] },
+  hurt: { top: 0.4, tilt: -16, sy: 0.8, trem: 0.4, m: [7, -5, 3] },
+  grumpy: { top: 0.5, tilt: 16, ey: 5, m: [12, -7, 0] },
+  dazed: { top: 0.25, l: { gx: -3, sy: 0.9 }, r: { gx: 3, sy: 1.1 }, m: [7, 0, 3] },
+  mindblown: { sx: 1.3, sy: 1.3, ey: 2, sp: 22, trem: 0.5, m: [5, 0, 11] },
+  lonely: { top: 0.35, tilt: -12, gx: -3, gy: 5, ey: 6, m: [6, -3, 0] },
+}
+
+const st = (c) => `style="fill:var(--face-${c},#fff)"`
+const sk = (c, w) => `fill="none" stroke-width="${w}" stroke-linecap="round" style="stroke:var(--face-${c},#fff)"`
+function blob(t) {
+  const N = 8, p = []
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2, r = 42 + 3 * Math.sin(t * 1.1 + i * 1.9) + 2 * Math.sin(t * 0.7 + i * 3.1)
+    p.push([Math.cos(a) * r, Math.sin(a) * r * 0.95])
+  }
+  const f = (q) => q[0].toFixed(1) + ' ' + q[1].toFixed(1), mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]
+  let d = 'M' + f(mid(p[0], p[1]))
+  for (let i = 1; i <= N; i++) d += 'Q' + f(p[i % N]) + ' ' + f(mid(p[i % N], p[(i + 1) % N]))
+  return d + 'Z'
+}
+
+// eye: [half width, half height, corner], sp/ey: eye spacing / y, my: mouth y, mS: mouth scale, rot: eye slant
+export const types = {
+  round: { shape: 'M-46 0a46 46 0 1 0 92 0a46 46 0 1 0-92 0Z', eye: [12, 12, 12], sp: 19, ey: 4, my: 24, mS: 1, rot: 0 },
+  robot: {
+    shape: 'M-28 -38H28Q42 -38 42 -24V26Q42 40 28 40H-28Q-42 40 -42 26V-24Q-42 -38 -28 -38Z',
+    eye: [11, 9, 3.5], sp: 19, ey: 2, my: 26, mS: 0.9, rot: 0,
+    back: `<rect x="-48" y="-8" width="7" height="18" rx="2.5" ${st('ring')}/><rect x="41" y="-8" width="7" height="18" rx="2.5" ${st('ring')}/><path d="M0 -38V-44" ${sk('ring', 2.5)}/><circle cy="-46" r="3.6" ${st('ink')}/>`,
+  },
+  cat: {
+    shape: 'M-40 -8L-38 -42L-14 -32Q0 -35 14 -32L38 -42L40 -8Q42 40 0 42Q-42 40 -40 -8Z',
+    eye: [8, 11, 8], sp: 18, ey: 6, my: 25, mS: 0.8, rot: 0,
+    inner: `<path d="M-3 16h6l-3 4z" ${st('ink')}/>`,
+    front: `<path d="M-35 -36L-23 -30L-34 -20ZM35 -36L23 -30L34 -20Z" style="fill:var(--face-ring,#34363a)"/><path d="M-31 20L-47 17M-31 26L-47 28M31 20L47 17M31 26L47 28" ${sk('ink', 1.5)} opacity=".5"/>`,
+  },
+  ghost: {
+    shape: 'M-40 40V0Q-40 -44 0 -44Q40 -44 40 0V40Q33 48 26.7 40T13.3 40T0 40T-13.3 40T-26.7 40Q-33 48 -40 40Z',
+    eye: [8, 11, 8], sp: 17, ey: -4, my: 19, mS: 0.8, rot: 0,
+  },
+  blob: { shape: blob, eye: [11, 11, 11], sp: 18, ey: 2, my: 23, mS: 1, rot: 0 },
+  alien: {
+    shape: 'M0 -46C30 -46 42 -20 40 4C38 30 18 46 0 46C-18 46 -38 30 -40 4C-42 -20 -30 -46 0 -46Z',
+    eye: [13, 8, 8], sp: 19, ey: 6, my: 31, mS: 0.6, rot: 24,
+  },
+  bear: {
+    shape: 'M-42 0a42 42 0 1 0 84 0a42 42 0 1 0-84 0Z',
+    eye: [8, 8, 8], sp: 17, ey: 4, my: 25, mS: 0.85, rot: 0,
+    back: `<circle cx="-30" cy="-32" r="13" stroke-width="2.5" style="fill:var(--face-skin,#000);stroke:var(--face-ring,#34363a)"/><circle cx="30" cy="-32" r="13" stroke-width="2.5" style="fill:var(--face-skin,#000);stroke:var(--face-ring,#34363a)"/><circle cx="-30" cy="-32" r="6" style="fill:var(--face-ring,#34363a)"/><circle cx="30" cy="-32" r="6" style="fill:var(--face-ring,#34363a)"/>`,
+    inner: `<ellipse cy="19" rx="15" ry="11" ${st('ink')} opacity=".13"/><ellipse cy="13" rx="4.5" ry="3.2" ${st('ink')}/>`,
+  },
 }
 
 export const reactions = ['blink', 'wink', 'nod', 'shake', 'bounce', 'pop', 'boing', 'spin', 'jitter']
@@ -43,21 +108,27 @@ const RX_DUR = { blink: 0.3, wink: 0.5, nod: 0.7, shake: 0.7, bounce: 0.8, pop: 
 
 const BASE = { top: 0, bot: 0, tilt: 0, sx: 1, sy: 1, sp: 19, ey: 4, gx: 0, gy: 0, m: [8, 2, 0], my: 24, ms: 0, deco: null, trem: 0 }
 
-function resolve(name) {
+function resolve(name, T) {
   const e = { ...BASE, ...(expressions[name] || expressions.idle) }
   const s = {}
   for (const k of ['L', 'R']) {
     const o = { ...e, ...(e[k.toLowerCase()] || {}) }
     s[k + 'top'] = o.top; s[k + 'bot'] = o.bot; s[k + 'tilt'] = o.tilt
     s[k + 'sx'] = o.sx; s[k + 'sy'] = o.sy
-    s[k + 'x'] = (k === 'L' ? -1 : 1) * o.sp; s[k + 'y'] = o.ey
+    s[k + 'x'] = (k === 'L' ? -1 : 1) * (o.sp - 19 + T.sp); s[k + 'y'] = o.ey - 4 + T.ey
     s[k + 'gx'] = o.gx; s[k + 'gy'] = o.gy
   }
-  s.mw = e.m[0]; s.mc = e.m[1]; s.mo = e.m[2]; s.my = e.my; s.ms = e.ms
+  s.mw = e.m[0] * T.mS; s.mc = e.m[1] * T.mS; s.mo = e.m[2] * T.mS; s.my = T.my + (e.my - 24); s.ms = e.ms * T.mS
   s.dH = e.deco === 'heart' ? 1 : 0
   s.dS = e.deco === 'spiral' ? 1 : 0
   s.dZ = e.deco === 'z' ? 1 : 0
   s.dQ = e.deco === 'q' ? 1 : 0
+  s.dX = e.deco === 'x' ? 1 : 0
+  s.dT = e.deco === 'star' ? 1 : 0
+  s.dB = e.deco === 'blush' ? 1 : 0
+  s.dW = e.deco === 'sweat' ? 1 : 0
+  s.dC = e.deco === 'tears' ? 1 : 0
+  s.dG = e.deco === 'shades' ? 1 : 0
   s.trem = e.trem
   return s
 }
@@ -101,6 +172,11 @@ function tick(now) {
 }
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
+const STAR = (() => {
+  let d = ''
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, r = i % 2 ? 5.5 : 13; d += (i ? 'L' : 'M') + (Math.cos(a) * r).toFixed(2) + ' ' + (Math.sin(a) * r).toFixed(2) }
+  return d + 'Z'
+})()
 const spiral = (() => {
   let d = 'M0 0'
   for (let a = 0.3; a < Math.PI * 4; a += 0.3) d += `L${(Math.cos(a) * a * 0.9).toFixed(2)} ${(Math.sin(a) * a * 0.9).toFixed(2)}`
@@ -110,8 +186,9 @@ const spiral = (() => {
 class Face {
   constructor(host, opts) {
     this.host = host
-    this.o = { expression: 'idle', mouth: false, pupils: false, follow: true, blink: true, wander: true, ...opts }
+    this.o = { expression: 'idle', type: 'round', mouth: false, pupils: false, follow: true, blink: true, wander: true, ...opts }
     this.id = ++uid
+    this.T = types[this.o.type]
     this.vis = true
     this.talkE = 0
     this.rx = null
@@ -123,7 +200,7 @@ class Face {
     this.mop = 0
     this.build()
     this.update({})
-    this.tgt = resolve(this.o.expression)
+    this.tgt = resolve(this.o.expression, this.T)
     this.cur = { ...this.tgt }
     faces.add(this)
     if (typeof IntersectionObserver === 'function') {
@@ -138,32 +215,42 @@ class Face {
     if (!document.getElementById('mm-css')) {
       const s = document.createElement('style'); s.id = 'mm-css'; s.textContent = CSS; document.head.appendChild(s)
     }
-    const p = 'mm' + this.id
+    const p = 'mm' + this.id, T = this.T
+    const [rx, ry, cr] = T.eye
+    this.ry = ry
     const svg = this.svg = el('svg', { class: 'mm', viewBox: '-50 -50 100 100', 'aria-hidden': 'true' })
     const defs = el('defs', {}, svg)
-    el('circle', { r: 12.6 }, el('clipPath', { id: p + 'e' }, defs))
-    el('circle', { r: 46 }, el('clipPath', { id: p + 'h' }, defs))
+    el('rect', { x: -rx - 0.6, y: -ry - 0.6, width: 2 * rx + 1.2, height: 2 * ry + 1.2, rx: cr + 0.6 }, el('clipPath', { id: p + 'e' }, defs))
+    this.clipH = el('path', {}, el('clipPath', { id: p + 'h' }, defs))
     const pat = el('pattern', { id: p + 's', width: 4, height: 4, patternUnits: 'userSpaceOnUse' }, defs)
     el('rect', { width: 4, height: 1.6, fill: '#000', opacity: 0.35 }, pat)
 
     const head = this.head = el('g', {}, svg)
-    el('circle', { r: 46, style: 'fill:var(--face-skin,#000)' }, head)
+    if (T.back) el('g', {}, head).innerHTML = T.back
+    this.headP = el('path', { style: 'fill:var(--face-skin,#000)' }, head)
     const fx = el('g', { 'clip-path': `url(#${p}h)` }, head)
+    if (T.inner) el('g', {}, fx).innerHTML = T.inner
+    const shape = () => ({ x: -rx, y: -ry, width: 2 * rx, height: 2 * ry, rx: cr })
     this.eyes = ['L', 'R'].map((k) => {
       const g = el('g', {}, fx)
       const sc = el('g', { 'clip-path': `url(#${p}e)` }, g)
-      const eye = el('circle', { r: 12, style: 'fill:var(--face-ink,#fff)' }, sc)
-      const pupil = el('circle', { r: 4.2, style: 'fill:var(--face-skin,#000)' }, sc)
+      const eye = el('rect', { ...shape(), style: 'fill:var(--face-ink,#fff)' }, sc)
+      const pupil = el('circle', { r: Math.min(rx, ry) * 0.36, style: 'fill:var(--face-skin,#000)' }, sc)
       const top = el('rect', { x: -22, y: -44, width: 44, height: 44, style: 'fill:var(--face-skin,#000)' }, sc)
       const bot = el('circle', { r: 16, style: 'fill:var(--face-skin,#000)' }, sc)
       const ov = el('g', {}, g)
+      const spinBg = el('rect', { ...shape(), style: 'fill:var(--face-ink,#fff)' }, ov)
       const heart = el('path', { d: 'M0 8C-16 -2 -12 -13 0 -6C12 -13 16 -2 0 8Z', style: 'fill:var(--face-ink,#fff)' }, ov)
+      const star = el('path', { d: STAR, style: 'fill:var(--face-ink,#fff)' }, ov)
       const spin = el('path', { d: spiral, fill: 'none', 'stroke-width': 1.8, 'stroke-linecap': 'round', style: 'stroke:var(--face-skin,#000)' }, ov)
-      const spinBg = el('circle', { r: 12, style: 'fill:var(--face-ink,#fff)' }, ov)
-      ov.insertBefore(spinBg, spin)
-      return { k, g, sc, eye, pupil, top, bot, ov, heart, spin, spinBg }
+      const xx = el('path', { d: 'M-6 -6L6 6M6 -6L-6 6', fill: 'none', 'stroke-width': 3, 'stroke-linecap': 'round', style: 'stroke:var(--face-skin,#000)' }, ov)
+      return { k, g, sc, eye, pupil, top, bot, ov, heart, star, spin, xx, spinBg }
     })
     this.mouth = el('path', { fill: 'none', 'stroke-width': 3.2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', style: 'stroke:var(--face-ink,#fff);fill:var(--face-ink,#fff)' }, fx)
+    this.lens = ['L', 'R'].map(() => el('rect', { x: -rx - 3, y: -ry - 3, width: 2 * rx + 6, height: 2 * ry + 6, rx: 5, 'stroke-width': 1.6, fill: '#05070a', style: 'stroke:var(--face-ink,#fff)' }, fx))
+    this.tears = ['L', 'R'].map(() => el('path', { d: 'M0 -4C3 0 4 3 0 5C-4 3 -3 0 0 -4Z', fill: '#7dd3fc' }, fx))
+    this.sweat = el('path', { d: 'M0 -8C5 -1 6 4 0 7C-6 4 -5 -1 0 -8Z', fill: '#7dd3fc' }, fx)
+    this.blush = [-1, 1].map((sgn) => el('ellipse', { cx: sgn * (T.sp + 9), cy: T.ey + ry + 7, rx: 8, ry: 4.5, fill: '#ff7a9a' }, fx))
     this.zs = [0, 1, 2].map((i) => {
       const t = el('text', { 'font-size': 9 + i * 3, 'font-weight': 700, 'font-family': 'ui-sans-serif,system-ui,sans-serif', style: 'fill:var(--face-ink,#fff)' }, fx)
       t.textContent = 'z'
@@ -174,23 +261,29 @@ class Face {
     // effect layers
     const gl = el('g', { class: 'mm-fx mm-gloss-l' }, fx)
     el('ellipse', { cx: -14, cy: -27, rx: 24, ry: 10, transform: 'rotate(-28 -14 -27)', fill: '#fff', opacity: 0.16 }, gl)
-    const rm = el('g', { class: 'mm-fx mm-rim-l' }, fx)
-    el('circle', { r: 43.5, fill: 'none', 'stroke-width': 1.2, opacity: 0.45, style: 'stroke:var(--face-ink,#fff)' }, rm)
+    const rm = el('g', { class: 'mm-fx mm-rim-l', transform: 'scale(.95)' }, fx)
+    this.rimP = el('path', { fill: 'none', 'stroke-width': 1.3, opacity: 0.45, style: 'stroke:var(--face-ink,#fff)' }, rm)
     const sl = el('g', { class: 'mm-fx mm-scan-l' }, fx)
-    el('rect', { x: -46, y: -46, width: 92, height: 92, fill: `url(#${p}s)` }, sl)
-    this.ring = el('circle', { r: 46, fill: 'none', 'stroke-width': 2.5, style: 'stroke:var(--face-ring,#34363a)' }, head)
+    el('rect', { x: -50, y: -50, width: 100, height: 100, fill: `url(#${p}s)` }, sl)
+    this.ringP = el('path', { fill: 'none', 'stroke-width': 2.5, style: 'stroke:var(--face-ring,#34363a)' }, head)
+    if (T.front) el('g', {}, head).innerHTML = T.front
+    this.setShape(typeof T.shape === 'function' ? T.shape(0) : T.shape)
     this.host.appendChild(svg)
   }
 
+  setShape(d) { for (const n of [this.headP, this.clipH, this.rimP, this.ringP]) n.setAttribute('d', d) }
+
   update(opts) {
+    const typeChanged = opts.type && opts.type !== this.o.type
     Object.assign(this.o, opts)
     const o = this.o
+    if (typeChanged) { this.T = types[o.type]; this.svg.remove(); this.build() }
     for (const [k, v] of [['skin', 'skin'], ['ink', 'ink'], ['ring', 'ring']]) {
       if (o[k]) this.host.style.setProperty('--face-' + v, o[k])
     }
     const c = this.svg.classList
     for (const k of ['gloss', 'rim', 'glow', 'scan', 'hue']) c.toggle('mm-' + k, !!o[k])
-    if (opts.expression) this.tgt = resolve(o.expression)
+    if (opts.expression || typeChanged) this.tgt = resolve(o.expression, this.T)
   }
 
   set(name) { this.update({ expression: name }) }
@@ -247,27 +340,46 @@ class Face {
     this.g.x += (gx - this.g.x) * (dt ? 1 - Math.exp(-dt * 8) : 1)
     this.g.y += (gy - this.g.y) * (dt ? 1 - Math.exp(-dt * 8) : 1)
 
+    const T = this.T, ry = this.ry
+    if (typeof T.shape === 'function') this.setShape(T.shape(t))
+    const pos = {}
     for (const e of this.eyes) {
       const K = e.k, a = K === 'L' ? c.Ltilt : -c.Rtilt
       const top = clamp(Math.max(c[K + 'top'], blink, rBlink, K === 'R' ? wink : 0), 0, 1)
       const bot = clamp(c[K + 'bot'], 0, 1)
       const x = c[K + 'x'] + c[K + 'gx'] + this.g.x, y = c[K + 'y'] + c[K + 'gy'] + this.g.y
-      const sc = `scale(${c[K + 'sx'].toFixed(3)} ${c[K + 'sy'].toFixed(3)})`
+      const rt = (K === 'L' ? -T.rot : T.rot), sc = `rotate(${rt}) scale(${c[K + 'sx'].toFixed(3)} ${c[K + 'sy'].toFixed(3)})`
+      pos[K] = [x, y]
       e.g.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)})`)
       e.sc.setAttribute('transform', sc)
       e.ov.setAttribute('transform', sc)
-      e.top.setAttribute('transform', `rotate(${a.toFixed(1)}) translate(0 ${(-12 + 25 * top).toFixed(2)})`)
-      e.bot.setAttribute('transform', `rotate(${a.toFixed(1)}) translate(0 ${(28 - 24 * bot).toFixed(2)})`)
+      e.top.setAttribute('transform', `rotate(${a.toFixed(1)}) translate(0 ${(-ry + (2 * ry + 1) * top).toFixed(2)})`)
+      e.bot.setAttribute('transform', `rotate(${a.toFixed(1)}) translate(0 ${(ry + 16 - 2 * ry * bot).toFixed(2)})`)
       e.pupil.setAttribute('transform', `translate(${(this.g.x * 0.6).toFixed(2)} ${(this.g.y * 0.6).toFixed(2)})`)
       e.pupil.style.opacity = o.pupils ? 1 : 0
-      e.eye.style.opacity = 1 - Math.max(c.dH, c.dS)
+      const hide = Math.max(c.dH, c.dT)
       e.heart.style.opacity = c.dH
+      e.star.style.opacity = c.dT
       e.spin.style.opacity = c.dS
-      e.spinBg.style.opacity = c.dS
+      e.xx.style.opacity = c.dX
+      e.spinBg.style.opacity = Math.max(c.dS, c.dX)
       e.spin.setAttribute('transform', `rotate(${(t * 220) % 360})`)
-      e.sc.style.opacity = 1 - c.dH
+      e.sc.style.opacity = 1 - hide
     }
 
+    this.lens.forEach((n, i) => {
+      const [x, y] = pos[i ? 'R' : 'L']
+      n.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)})`); n.style.opacity = c.dG
+    })
+    this.tears.forEach((n, i) => {
+      const [x, y] = pos[i ? 'R' : 'L'], ph = still ? 0.3 : (t * 0.9 + i * 0.5) % 1
+      n.setAttribute('transform', `translate(${x.toFixed(2)} ${(y + ry + 2 + ph * 22).toFixed(2)})`)
+      n.style.opacity = c.dC * Math.sin(ph * Math.PI)
+    })
+    const sp = still ? 0 : Math.sin(t * 3) * 1.2
+    this.sweat.setAttribute('transform', `translate(${(T.sp + 12).toFixed(1)} ${(-24 + sp).toFixed(2)})`)
+    this.sweat.style.opacity = c.dW
+    this.blush.forEach((n) => (n.style.opacity = c.dB * 0.55))
     const tk = this.talkE
     const want = o.mouth || tk > 0.02 ? 1 : 0
     this.mop += (want - this.mop) * (dt ? 1 - Math.exp(-dt * 12) : 1)
@@ -301,6 +413,7 @@ export function createFace(host, opts = {}) {
   if (opts.expression && !expressions[opts.expression]) {
     throw new Error(`Unknown expression "${opts.expression}". Try: ${Object.keys(expressions).join(', ')}`)
   }
+  if (opts.type && !types[opts.type]) throw new Error(`Unknown type "${opts.type}". Try: ${Object.keys(types).join(', ')}`)
   const f = new Face(host, opts)
   return {
     el: f.svg,

@@ -1,6 +1,6 @@
 # mimik
 
-A small animated SVG face for your app. 30 expressions, 9 reactions, lip-synced speech. One file, no dependencies, MIT.
+A small animated SVG face for your app. 50 expressions, 7 face types (round, robot, cat, ghost, blob, alien, bear), 9 reactions, lip-synced speech. One file, no dependencies, MIT.
 
 Live: https://reinharddev.github.io/mimik/
 
