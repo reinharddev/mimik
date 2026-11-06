@@ -104,7 +104,11 @@ export const types = {
 }
 
 export const reactions = ['blink', 'wink', 'nod', 'shake', 'bounce', 'pop', 'boing', 'spin', 'jitter']
-const RX_DUR = { blink: 0.3, wink: 0.5, nod: 0.7, shake: 0.7, bounce: 0.8, pop: 0.45, boing: 0.8, spin: 0.8, jitter: 0.5 }
+const RX_DUR = { blink: 0.26, wink: 0.42, nod: 0.72, shake: 0.72, bounce: 0.85, pop: 0.5, boing: 0.95, spin: 0.95, jitter: 0.5 }
+// Spring per parameter (stiffness, damping). Damping ratio d/(2*sqrt(k)) < 1 gives a slight overshoot.
+const SPRING = { k: 190, d: 24 }
+const GAZE = { k: 150, d: 19 }
+const ease = (p) => (p < 0.5 ? 2 * p * p : 1 - 2 * (1 - p) * (1 - p))
 
 const BASE = { top: 0, bot: 0, tilt: 0, sx: 1, sy: 1, sp: 19, ey: 4, gx: 0, gy: 0, m: [8, 2, 0], my: 24, ms: 0, deco: null, trem: 0 }
 
@@ -154,11 +158,18 @@ function el(tag, attrs, parent) {
 const reduceMotion = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : { matches: false }
 const faces = new Set()
 const ptr = { x: 0, y: 0, t: -1e9 }
+const CURSOR_HOLD = 2.2 // seconds after the last pointer event before the face goes back to wandering
+const LEAN = 0.45 // head shift per unit of gaze: the body follows the eyes
+// How strongly each mood follows the cursor (default 1). Dreamy moods barely turn, alert ones lock on.
+const TRACK = { thinking: 0.15, bored: 0.2, exasperated: 0.15, tired: 0.3, sleepy: 0.45, sleep: 0, dead: 0, dizzy: 0.2, shy: 0.4, sad: 0.7, scared: 1.3, focus: 1.25, excited: 1.2, angry: 1.15 }
 let raf = 0, last = 0, listening = false
 
 function ensureLoop() {
   if (!listening) {
-    addEventListener('pointermove', (e) => { ptr.x = e.clientX; ptr.y = e.clientY; ptr.t = performance.now() / 1000 }, { passive: true })
+    const seen = (e) => { ptr.x = e.clientX; ptr.y = e.clientY; ptr.t = performance.now() / 1000 }
+    addEventListener('pointermove', seen, { passive: true })
+    addEventListener('pointerdown', seen, { passive: true })
+    addEventListener('blur', () => { ptr.t = -1e9 })
     listening = true
   }
   if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick) }
@@ -202,6 +213,10 @@ class Face {
     this.update({})
     this.tgt = resolve(this.o.expression, this.T)
     this.cur = { ...this.tgt }
+    this.vel = {}
+    this.gv = { x: 0, y: 0 }
+    this.rect = null
+    this.rectT = -9
     faces.add(this)
     if (typeof IntersectionObserver === 'function') {
       this.io = new IntersectionObserver((en) => { this.vis = en[en.length - 1].isIntersecting })
@@ -292,33 +307,44 @@ class Face {
     this.rx = { name, t0: performance.now() / 1000, d: RX_DUR[name] }
   }
   talk(e) { this.talkE = clamp(e, 0, 1) }
+  look(x, y, ms = 900) { this.lk = { x: clamp(x, -1, 1), y: clamp(y, -1, 1), until: performance.now() / 1000 + ms / 1000 } }
 
   step(t, dt) {
     const o = this.o, c = this.cur, tg = this.tgt
     const still = reduceMotion.matches
-    const k = dt ? 1 - Math.exp(-dt * 10) : 1
-    for (const key in tg) c[key] += (tg[key] - c[key]) * k
+    if (!dt) Object.assign(c, tg)
+    else {
+      // Semi-implicit Euler spring, sub-stepped so a slow frame cannot blow it up.
+      const n = Math.ceil(dt / (1 / 60)), h = dt / n, v = this.vel
+      const kf = 1 - Math.exp(-dt * 10)
+      for (const key in tg) {
+        if (key[0] === 'd' || key === 'trem') { c[key] += (tg[key] - c[key]) * kf; continue } // opacities: no overshoot
+        let x = c[key], vv = v[key] || 0
+        for (let i = 0; i < n; i++) { vv += ((tg[key] - x) * SPRING.k - vv * SPRING.d) * h; x += vv * h }
+        c[key] = x; v[key] = vv
+      }
+    }
 
     let blink = 0, rBlink = 0, wink = 0
     if (o.blink && !still && t >= this.nextBlink) { this.blinkStart = t; this.nextBlink = t + 2 + Math.random() * 3.5 }
     const bp = (t - this.blinkStart) / 0.16
-    if (bp >= 0 && bp <= 1) blink = 1 - Math.abs(bp * 2 - 1)
+    if (bp >= 0 && bp <= 1) blink = Math.sin(bp * Math.PI) ** 0.55
 
-    let tx = 0, ty = Math.sin(t * 1.3) * (still ? 0 : 0.5), rot = 0, hx = 1, hy = 1
+    let tx = this.g.x * LEAN, ty = Math.sin(t * 1.3) * (still ? 0 : 0.5) + this.g.y * LEAN, rot = 0, hx = 1, hy = 1
     if (this.rx) {
       const p = (t - this.rx.t0) / this.rx.d
       if (p >= 1) this.rx = null
       else if (p >= 0) {
-        const tri = 1 - Math.abs(p * 2 - 1), fade = 1 - p
+        const tri = Math.sin(p * Math.PI) ** 0.55, fade = 1 - p
         switch (this.rx.name) {
           case 'blink': rBlink = tri; break
           case 'wink': wink = tri; break
           case 'nod': if (!still) ty += 6 * Math.sin(p * Math.PI * 4) * fade; break
           case 'shake': if (!still) tx += 5 * Math.sin(p * Math.PI * 6) * fade; break
-          case 'bounce': if (!still) ty -= 14 * Math.abs(Math.sin(p * Math.PI * 2)) * fade; break
-          case 'pop': hx = hy = 1 + 0.25 * Math.sin(p * Math.PI); break
-          case 'boing': hx = 1 + 0.3 * Math.sin(p * Math.PI * 3) * fade; hy = 1 / hx; break
-          case 'spin': if (!still) rot = (1 - Math.pow(1 - p, 3)) * 360; break
+          case 'bounce': if (!still) { const i = Math.sin(p * Math.PI * 2) * fade; ty -= 14 * Math.abs(i); hy += i * 0.13; hx -= i * 0.13 } break
+          case 'pop': { const i = Math.sin(p * Math.PI) * (1 - p * 0.4); hx = hy = 1 + 0.17 * i; break }
+          case 'boing': { const i = Math.sin(p * Math.PI * 2 * 2.2) * Math.exp(-4 * p); hy += i * 0.24; hx -= i * 0.24; break }
+          case 'spin': if (!still) rot = ease(p) * 360; break
           case 'jitter': if (!still) { tx += (Math.random() - 0.5) * 4; ty += (Math.random() - 0.5) * 4 } break
         }
       }
@@ -328,17 +354,26 @@ class Face {
 
     // gaze: pointer if it moved recently, otherwise wander
     let gx = 0, gy = 0
-    if (o.follow && ptr.t > 0 && t - ptr.t < 4 && !still) {
-      const r = this.host.getBoundingClientRect()
+    if (this.lk && t < this.lk.until && !still) {
+      gx = this.lk.x * 5; gy = this.lk.y * 5
+    } else if (o.follow && ptr.t > 0 && t - ptr.t < CURSOR_HOLD && !still) {
+      if (!this.rect || t - this.rectT > 0.4) { this.rect = this.host.getBoundingClientRect(); this.rectT = t }
+      const r = this.rect
       const dx = ptr.x - (r.left + r.width / 2), dy = ptr.y - (r.top + r.height / 2)
-      const d = Math.hypot(dx, dy) || 1, f = Math.min(1, d / 200)
-      gx = (dx / d) * f * 5; gy = (dy / d) * f * 5
+      const d = Math.hypot(dx, dy) || 1, g0 = Math.min(1, d / Math.max(r.width, r.height, 1) / 2.2), f = Math.min(1, g0 * (2 - g0) * 4.4)
+      const tk = TRACK[o.expression] ?? 1
+      gx = (dx / d) * f * 5 * tk; gy = (dy / d) * f * 5 * tk
     } else if (o.wander && !still) {
       if (t >= this.nextWander) { this.tw = { x: (Math.random() - 0.5) * 8, y: (Math.random() - 0.5) * 6 }; this.nextWander = t + 1.2 + Math.random() * 2.5 }
       gx = this.tw.x; gy = this.tw.y
     }
-    this.g.x += (gx - this.g.x) * (dt ? 1 - Math.exp(-dt * 8) : 1)
-    this.g.y += (gy - this.g.y) * (dt ? 1 - Math.exp(-dt * 8) : 1)
+    if (!dt) { this.g.x = gx; this.g.y = gy } else {
+      const n = Math.ceil(dt / (1 / 60)), h = dt / n, G = this.gv
+      for (let i = 0; i < n; i++) {
+        G.x += ((gx - this.g.x) * GAZE.k - G.x * GAZE.d) * h; this.g.x += G.x * h
+        G.y += ((gy - this.g.y) * GAZE.k - G.y * GAZE.d) * h; this.g.y += G.y * h
+      }
+    }
 
     const T = this.T, ry = this.ry
     if (typeof T.shape === 'function') this.setShape(T.shape(t))
@@ -424,6 +459,7 @@ export function createFace(host, opts = {}) {
     update: (o) => f.update(o),
     react: (n) => f.react(n),
     talk: (e) => f.talk(e),
+    look: (x, y, ms) => f.look(x, y, ms),
     destroy: () => f.destroy(),
   }
 }
